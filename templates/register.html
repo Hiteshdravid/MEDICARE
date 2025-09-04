@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCarePlus - Register</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="form-container">
+        <!-- Left Section with Branding -->
+        <div class="left-section">
+            <div class="floating-elements">
+                <div class="floating-circle"></div>
+                <div class="floating-circle"></div>
+                <div class="floating-circle"></div>
+            </div>
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <i class="fas fa-heartbeat"></i>
+                    MediCarePlus
+                </div>
+                <div class="brand-tagline">YOUR HEALTH, OUR PRIORITY</div>
+                <div class="brand-subtitle">Comprehensive Healthcare Solutions</div>
+            </div>
+        </div>
+
+        <!-- Right Section with Registration Form -->
+        <div class="right-section">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1 class="login-title">
+                        <i class="fas fa-user-plus login-icon"></i>
+                        Register
+                    </h1>
+                    <p class="login-subtitle">Create your healthcare account</p>
+                </div>
+
+                <form method="POST" id="registerForm" class="login-form space-y-4">
+                    <!-- Role Selection -->
+                    <div class="form-group">
+                        <label class="block text-gray-700 mb-2">I am a:</label>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="role" value="doctor" required class="mr-2" id="doctorRole">
+                                <span class="text-gray-700">Doctor</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="role" value="patient" required class="mr-2" checked id="patientRole">
+                                <span class="text-gray-700">Patient</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <input type="text" name="full_name" class="form-input" id="full_name"  required>
+                        <label for="full_name" class="form-label">Full Name</label>
+                        <i class="fas fa-user label-icon"></i>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <input type="email" name="email" class="form-input" id="email"  required>
+                        <label for="email" class="form-label">Email Address</label>
+                        <i class="fas fa-envelope label-icon"></i>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <input type="password" name="password" class="form-input" id="password"  required>
+                        <label for="password" class="form-label">Password</label>
+                        <i class="fas fa-lock label-icon"></i>
+                        <button type="button" class="password-toggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <!-- Specialization Field (for doctors) -->
+                    <div class="form-group hidden" id="specializationField">
+                        <input type="text" name="specialization" class="form-input" id="specialization" placeholder="Specialization (e.g., Cardiology)">
+                        <label for="specialization" class="form-label">Specialization</label>
+                        <i class="fas fa-stethoscope label-icon"></i>
+                    </div>
+
+                    <button type="submit" class="login-button">
+                        <span class="button-text">Register</span>
+                        <i class="fas fa-arrow-right button-icon"></i>
+                    </button>
+                </form>
+
+                <div class="form-footer"> 
+                    <p class="signup-link "> 
+                    Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+                </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div id="toast-container" class="toast-container">
+                {% for message in messages %}
+                    <div class="toast {% if 'success' in message %}toast-success{% else %}toast-error{% endif %}">
+                        <i class="{% if 'success' in message %}fas fa-check-circle{% else %}fas fa-exclamation-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.querySelector('.password-toggle');
+    const toggleIcon = toggleButton.querySelector('i');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'fas fa-eye';
+    }
+
+    toggleButton.style.transform = 'scale(0.9)';
+    setTimeout(() => toggleButton.style.transform = 'scale(1)', 150);
+}
+
+// Attach the function to the button
+document.querySelector('.password-toggle').addEventListener('click', togglePassword);
+</script>
+
+
+</body>
+</html>
