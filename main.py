@@ -25,9 +25,9 @@ mongo = PyMongo(app)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'dravidchellamuthu@gmail.com'
-app.config['MAIL_PASSWORD'] = 'eghw xhqz eemu rmbn'
-app.config['MAIL_DEFAULT_SENDER'] = 'dravidchellamuthu@gmail.com'
+app.config['MAIL_USERNAME'] = 'your_mail@gmail.com'
+app.config['MAIL_PASSWORD'] = 'YOUR_APP_PASSWORD'
+app.config['MAIL_DEFAULT_SENDER'] = 'your_mail@gmail.com'
 mail = Mail(app)
 
 # ---------------------------
