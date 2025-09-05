@@ -1,3 +1,5 @@
+import threading
+import webbrowser
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_pymongo import PyMongo
 from flask_mail import Mail, Message
@@ -9,7 +11,7 @@ from forms import AppointmentForm
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key_change_this_in_production'
+app.secret_key = 'Secret'
 
 # ---------------------------
 # MongoDB Configuration
@@ -35,7 +37,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            flash('You must log in to access this page.')
+            flash('You must log in to access this page.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -46,11 +48,8 @@ def login_required(f):
 def doctor_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('You must log in to access this page.')
-            return redirect(url_for('login'))
-        if session.get('user_role') != 'doctor':
-            flash('This feature is only available to doctors.')
+        if 'user_id' not in session or session.get('user_role') != 'doctor':
+            flash('This feature is only available to doctors.', 'error')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
@@ -66,7 +65,7 @@ def index():
     appointments = []
     prescriptions = []
 
-    if 'user_id' in session:
+    if 'user_id' in session and session.get('user_role') == 'patient':
         appointments = list(mongo.db.appointments.find({'user_id': session['user_id']})) or []
         prescriptions = list(mongo.db.prescriptions.find({'user_id': session['user_id']})) or []
 
@@ -87,10 +86,9 @@ def register():
         specialization = request.form.get('specialization', '')
         full_name = request.form.get('full_name', '')
 
-        # Check if user already exists
         existing_user = mongo.db.users.find_one({'email': email})
         if existing_user:
-            flash('An account with this email already exists.')
+            flash('An account with this email already exists.', 'error')
             return render_template('register.html')
 
         user_data = {
@@ -104,7 +102,7 @@ def register():
             user_data['specialization'] = specialization
 
         mongo.db.users.insert_one(user_data)
-        flash('Registration successful! Please log in.')
+        flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -119,16 +117,19 @@ def login():
             session['user_id'] = str(user['_id'])
             session['user_role'] = user.get('role', 'patient')
             session['user_name'] = user.get('full_name', email)
-            flash('Login successful!')
+            flash('Login successful!', 'success')
+            
+            # --- MODIFIED: Redirect all users to the index page ---
             return redirect(url_for('index'))
+            # --------------------------------------------------
         else:
-            flash('Invalid email or password.')
+            flash('Invalid email or password.', 'error')
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You have been logged out.')
+    flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
 # ---------------------------
@@ -145,7 +146,7 @@ def schedule_appointment():
 
     doctor = mongo.db.users.find_one({'email': doctor_email, 'role': 'doctor'})
     if not doctor:
-        flash('Selected doctor not found. Please select a valid doctor.')
+        flash('Selected doctor not found. Please select a valid doctor.', 'error')
         return redirect(url_for('index'))
 
     mongo.db.appointments.insert_one({
@@ -156,22 +157,22 @@ def schedule_appointment():
         'user_id': session['user_id'],
         'status': 'Scheduled',
         'doctor_name': doctor.get('full_name', doctor_email),
-        'doctor_name': doctor_email,
+        'doctor_email': doctor_email,
         'doctor_specialization': doctor.get('specialization', 'General Medicine')
     })
 
     subject = "Appointment Confirmation"
-    body = f"Dear {full_name},\n\nYour appointment has been scheduled for {appointment_date}.\nDoctor: {doctor_email}\nSpecialization: {doctor.get('specialization', 'General Medicine')}\nReason: {reason}\n\nThank you!"
+    body = f"Dear {full_name},\n\n Your appointment has been scheduled for {appointment_date}.\nDoctor: {doctor.get('full_name', doctor_email)} \nSpecialization: {doctor.get('specialization', 'General Medicine')}\nReason: {reason}\n\nThank you!"
     send_email(subject, email, body)
 
-    flash('Appointment scheduled successfully! A confirmation email has been sent.')
+    flash('Appointment scheduled successfully! A confirmation email has been sent.', 'success')
     return redirect(url_for('index'))
 
 @app.route('/cancel_appointment/<appointment_id>')
 @login_required
 def cancel_appointment(appointment_id):
     appointment = mongo.db.appointments.find_one({'_id': ObjectId(appointment_id)})
-    if appointment:
+    if appointment and appointment['user_id'] == session['user_id']:
         mongo.db.appointments.update_one(
             {'_id': ObjectId(appointment_id)},
             {'$set': {'status': 'Cancelled'}}
@@ -179,7 +180,9 @@ def cancel_appointment(appointment_id):
         subject = "Appointment Cancellation"
         body = f"Dear {appointment['full_name']},\n\nYour appointment on {appointment['appointment_date']} has been cancelled successfully.\n\nThank you,\nMediCare Team"
         send_email(subject, appointment['email'], body)
-        flash("Appointment cancelled successfully! A confirmation email has been sent.")
+        flash("Appointment cancelled successfully! A confirmation email has been sent.", 'success')
+    else:
+        flash('You are not authorized to cancel this appointment.', 'error')
     return redirect(url_for('index'))
 
 # ---------------------------
@@ -212,7 +215,7 @@ def add_prescription():
         body = f"Prescription: {medication}\nType: {p_type}\nDosage: {dosage}\nInstructions: {instructions}"
         send_email(subject, email, body)
 
-    flash('Prescription added successfully!')
+    flash('Prescription added successfully!', 'success')
     return redirect(url_for('index'))
 
 @app.route('/delete_prescription/<prescription_id>')
@@ -221,7 +224,9 @@ def delete_prescription(prescription_id):
     prescription = mongo.db.prescriptions.find_one({'_id': ObjectId(prescription_id)})
     if prescription:
         mongo.db.prescriptions.delete_one({'_id': ObjectId(prescription_id)})
-        flash('Prescription deleted successfully!')
+        flash('Prescription deleted successfully!', 'success')
+    else:
+        flash('Prescription not found.', 'error')
     return redirect(url_for('index'))
 
 # ---------------------------
@@ -235,8 +240,22 @@ def send_email(subject, recipient, body):
     except Exception as e:
         print(f"Email sending failed: {e}")
 
+# --- NEW: Doctor's Dashboard Route ---
+@app.route('/doctor_appointments')
+@login_required
+@doctor_required
+def doctor_appointments():
+    # Get the doctor's name from the session
+    doctor_full_name = session.get('user_name')
+    # Find all appointments where the doctor's name matches
+    appointments = list(mongo.db.appointments.find({'doctor_name': doctor_full_name}))
+    return render_template('doctor_appointments.html', appointments=appointments)
+# -------------------------------------
+
 # ---------------------------
 # Run the App
 # ---------------------------
 if __name__ == '__main__':
+    
+    threading.Timer(1, lambda: webbrowser.open("http://127.0.0.1:5000")).start()
     app.run(debug=True)
