@@ -3,260 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCare - Patient Portal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>MediCare Scheduler</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .table-custom-cell {
+            white-space: normal;
+            word-wrap: break-word;
+            max-width: 200px; /* Adjust as needed */
+        }
+    </style>
 </head>
-<body class="main-body">
-
-    <!-- Header Section -->
-<header class="main-header">
-    <div class="header-content flex items-center justify-between">
-        <div>
-            <h1 class="main-title">MediCare</h1>
-            <p class="subtitle">Your health, our priority. Comprehensive patient care at your fingertips.</p>
-        </div>
-        <div class="header-actions flex gap-2">
+<body class="min-h-screen bg-gray-100">
+    <header class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-heartbeat text-2xl"></i>
+                <h1 class="text-2xl font-bold">MediCare</h1>
+            </div>
             {% if 'user_id' in session %}
-                <a href="{{ url_for('logout') }}" class="cta-button">Logout</a>
-            {% else %}
-                <a href="{{ url_for('login') }}" class="cta-button">Login</a>
-                <a href="{{ url_for('register') }}" class="cta-button">Register</a>
+                <div class="flex items-center space-x-4">
+                    {% if session['user_role'] == 'doctor' %}
+                        <a href="{{ url_for('doctor_appointments') }}" class="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-md transition duration-300 text-sm md:text-base">
+                            View Appointments
+                        </a>
+                    {% endif %}
+                    <span class="text-sm md:text-base hidden sm:inline">Hello, {{ session['user_name'] }}</span>
+                    <a href="{{ url_for('logout') }}" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md transition duration-300 text-sm md:text-base">Logout</a>
+                </div>
             {% endif %}
         </div>
-    </div>
-</header>
+    </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Flash Messages Section -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <ul class="flashes">
-                    {% for category, message in messages %}
-                        <li class="{{ category }}">{{ message }}</li>
-                    {% endfor %}
+                <ul class="mb-4">
+                {% for category, message in messages %}
+                    <li class="p-3 mb-2 rounded-md {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' if category == 'error' else 'bg-blue-100 text-blue-800' }}">
+                        {{ message }}
+                    </li>
+                {% endfor %}
                 </ul>
             {% endif %}
         {% endwith %}
 
-        <!-- Appointment Form Section - Only for Patients -->
-        {% if 'user_id' not in session %}
-        <section id="appointments" class="section">
-            <div class="login-prompt mt-12 p-6 bg-yellow-200 border-2 border-red-600 rounded-lg text-center">
-                <p class="text-3xl md:text-4xl font-extrabold text-red-700">
-                    Please <a href="{{ url_for('login') }}" class="underline">login</a> or 
-                    <a href="{{ url_for('register') }}" class="underline">register</a> to book appointments
-                </p>
+            
+
+        {% if not session.get('user_id') %}
+            <div class="text-center py-20 " style="background-image: url('{{ url_for('static', filename='images/pexels-jplenio-1103970.jpg') }}'); ">
+                <h2 class="text-lg text-gray-700">Hey Visitors!! Are you Looking to Book Appointments? Then </h2>
+                <h2 class="text-4xl font-extrabold text-gray-800 mb-4">Welcome to MediCare!</h2>
+                <p class="text-lg text-gray-600">Your seamless health management solution. Please log in or register to get started.</p>
+                <div class="mt-8 space-x-4">
+                    <a href="{{ url_for('login') }}" class="px-6 py-3 text-lg font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition duration-300">Login</a>
+                    <a href="{{ url_for('register') }}" class="px-6 py-3 text-lg font-semibold rounded-lg text-blue-600 border border-blue-600 hover:bg-blue-50 transition duration-300">Register</a>
+                </div>
             </div>
-        </section>
-        {% elif 'user_id' in session and session.get('user_role') == 'patient' %}
-        <section id="appointments" class="section">
-            <div class="form-card">
-                <h2 class="section-title">Schedule an Appointment</h2>
-                <form method="POST" action="/schedule_appointment" class="form">
-                    {{ form.hidden_tag() }} <!-- Included for CSRF protection -->
-                    <div class="form-grid">
+            <hr>
+  <section class="relative">
+        <img src="{{ url_for('static', filename='images/pexels-moose-photos-170195-1037992.jpg') }}" alt="A medical office" class="w-full rounded-lg shadow-lg">
+        
+        <div class="absolute inset-0 flex flex-col justify-center items-center text-center p-4">
+            <h2 class="text-3xl font-bold text-white text-shadow-md">Our Commitment to Quality Care</h2>
+            <p class="text-lg text-gray-200 mt-2 max-w-xl mx-auto text-shadow-md">
+                We are dedicated to providing the highest standard of medical care to our community. Our experienced team and modern facilities are here to serve all your health needs.
+            </p>
+        </div>
+    </section>
+            {% endif %}
+
+
+            
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        {% if session.get('user_role') == 'patient' %}
+            <section id="schedule-appointment" class="bg-white shadow-lg rounded-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Schedule a New Appointment</h2>
+                <form action="{{ url_for('schedule_appointment') }}" method="post" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            {{ form.full_name.label(class="block text-gray-700 mb-2 font-medium") }}
-                            {{ form.full_name(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200") }}
+                            <label for="full_name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" id="full_name" name="full_name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
-                            {{ form.email.label(class="block text-gray-700 mb-2 font-medium") }}
-                            {{ form.email(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200") }}
+                            <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                            <input type="email" id="email" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
-                            {{ form.appointment_date.label(class="block text-gray-700 mb-2 font-medium") }}
-                            {{ form.appointment_date(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200") }}
+                            <label for="appointment_date" class="block text-sm font-medium text-gray-700">Appointment Date</label>
+                            <input type="date" id="appointment_date" name="appointment_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-gray-700 mb-2">Select Doctor</label>
-                            <select name="doctor" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
-                                <option value="">-- Select Doctor --</option>
+                            <label for="doctor" class="block text-sm font-medium text-gray-700">Select a Doctor</label>
+                            <select id="doctor" name="doctor" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="" disabled selected>-- Select a Doctor --</option>
                                 {% for doctor in doctors %}
-                                    <option value="{{ doctor.email }}">{{ doctor.full_name }} - {{ doctor.specialization }}</option>
+                                    <option value="{{ doctor.email }}">{{ doctor.full_name }} ({{ doctor.specialization }})</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
                     <div>
-                        {{ form.reason.label(class="block text-gray-700 mb-2 font-medium") }}
-                        {{ form.reason(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 h-24 resize-none") }}
+                        <label for="reason" class="block text-sm font-medium text-gray-700">Reason for Visit</label>
+                        <textarea id="reason" name="reason" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
                     </div>
-                    <div class="mt-6">
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-300 transform hover:scale-105">
-                            <i class="fas fa-calendar-plus mr-2"></i> Schedule Appointment
+                    <div class="text-right">
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Schedule Appointment
                         </button>
                     </div>
                 </form>
-            </div>
-        </section>
-        {% endif %}
+            </section>
 
-        <!-- Prescription Section - Only for Doctors -->
-        {% if 'user_id' in session and session.get('user_role') == 'doctor' %}
-        <section id="prescriptions" class="section">
-            <div class="container">
-                <h2 class="section-title">Manage Prescriptions</h2>
-                <div class="form-card mb-10">
-                    <form id="prescriptionForm" class="form-group" method="POST" action="/add_prescription">
-                        <div class="form-grid">
-                            <div>
-                                <label for="patientId" class="label">Patient ID/Email</label>
-                                <input type="text" id="patientId" name="email" required class="input-field">
-                            </div>
-                            <div>
-                                <label for="prescriptionType" class="label">Prescription Type</label>
-                                <select id="prescriptionType" name="type" required class="input-field">
-                                    <option value="">-- Select Type --</option>
-                                    <option value="medication">Medication</option>
-                                    <option value="lab_test">Lab Test</option>
-                                    <option value="procedure">Medical Procedure</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="medicationName" class="label">Medication/Test Name</label>
-                                <input type="text" id="medicationName" name="medication" required class="input-field">
-                            </div>
-                            <div>
-                                <label for="dosage" class="label">Dosage/Frequency</label>
-                                <input type="text" id="dosage" name="dosage" required class="input-field">
-                            </div>
-                            <div>
-                                <label for="startDate" class="label">Start Date</label>
-                                <input type="date" id="startDate" name="start_date" required class="input-field">
-                            </div>
-                            <div>
-                                <label for="endDate" class="label">End Date</label>
-                                <input type="date" id="endDate" name="end_date" class="input-field">
-                            </div>
+            <section id="your-appointments" class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Appointments</h2>
+                {% if appointments %}
+                    <div class="overflow-x-auto bg-white shadow-lg rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Doctor</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for appointment in appointments %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-4 px-4 whitespace-nowrap table-custom-cell">{{ appointment.doctor_name }} ({{ appointment.doctor_specialization }})</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">{{ appointment.appointment_date }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap table-custom-cell">{{ appointment.reason }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            {% if appointment.status == 'Scheduled' %} bg-yellow-100 text-yellow-800
+                                            {% elif appointment.status == 'Confirmed' %} bg-green-100 text-green-800
+                                            {% elif appointment.status == 'Cancelled' %} bg-red-100 text-red-800
+                                            {% endif %}">
+                                            {{ appointment.status }}
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-4 whitespace-nowrap text-sm font-medium">
+                                        {% if appointment.status != 'Cancelled' %}
+                                            <a href="{{ url_for('cancel_appointment', appointment_id=appointment._id) }}" class="text-red-600 hover:text-red-900 transition duration-300">Cancel</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="mt-4 text-gray-600">You have no appointments booked at this time.</p>
+                {% endif %}
+            </section>
+
+            <section id="your-prescriptions">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Prescriptions</h2>
+                {% if prescriptions %}
+                    <div class="overflow-x-auto bg-white shadow-lg rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Medication</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dosage</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructions</th>
+                                    <th scope="col" class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for prescription in prescriptions %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-4 px-4 whitespace-nowrap">{{ prescription.type.title() }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">{{ prescription.medication }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">{{ prescription.dosage }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">{{ prescription.start_date }} {% if prescription.end_date %}to {{ prescription.end_date }}{% endif %}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap table-custom-cell">{{ prescription.instructions }}</td>
+                                    <td class="py-4 px-4 whitespace-nowrap text-sm font-medium">
+                                        <a href="{{ url_for('delete_prescription', prescription_id=prescription._id) }}" class="text-red-600 hover:text-red-900 transition duration-300">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="mt-4 text-gray-600">You have no prescriptions on record.</p>
+                {% endif %}
+            </section>
+        {% elif session.get('user_role') == 'doctor' %}
+            <section id="manage-prescriptions" class="bg-white shadow-lg rounded-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Add New Prescription</h2>
+                <form action="{{ url_for('add_prescription') }}" method="post" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patient_email" class="block text-sm font-medium text-gray-700">Patient ID/Email</label>
+                            <input type="email" id="patient_email" name="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label for="instructions" class="label">Special Instructions</label>
-                            <textarea id="instructions" name="instructions" rows="3" class="input-field"></textarea>
+                            <label for="type" class="block text-sm font-medium text-gray-700">Prescription Type</label>
+                            <select id="type" name="type" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="" disabled selected>-- Select Type --</option>
+                                <option value="medication">Medication</option>
+                                <option value="test">Test</option>
+                            </select>
                         </div>
                         <div>
-                            <input type="checkbox" id="emailNotification" name="emailNotification" checked>
-                            <label for="emailNotification" class="label-inline">Email this prescription to patient</label>
+                            <label for="medication" class="block text-sm font-medium text-gray-700">Medication/Test Name</label>
+                            <input type="text" id="medication" name="medication" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        <button type="submit" class="submit-button-green">Add Prescription</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-        {% endif %}
-
-        <!-- Appointments List Section -->
-        <section id="appointmentsList" class="section">
-            <div class="container">
-                <h2 class="section-title">Your Appointments</h2>
-                <div class="list-container" id="appointmentsContainer">
-
-                    {% if appointments %}
-                        {% for appointment in appointments %}
-                        <div class="appointment-card">
-                            <div class="list-item-content">
-                                <div class="list-item-text">
-                                    <h3 class="list-title">{{ appointment['full_name'] }} Consultation</h3>
-                                    <p class="list-subtitle">With {{ appointment['doctor_name']}}</p>
-                                    <p class="list-meta">
-                                        <i class="far fa-calendar-alt icon"></i>
-                                        {{ appointment.appointment_date }}
-                                    </p>
-                                    <p class="list-meta">
-                                        <i class="far fa-clock icon"></i>
-                                        {{ appointment.duration or "30 minutes" }}
-                                    </p>
-                                    <p class="list-meta">
-                                        <strong>Status:</strong> {{ appointment.status }}
-                                    </p>
-                                </div>
-                                <div class="list-actions">
-                                    {% if appointment.status != "Cancelled" %}
-                                    <a href="{{ url_for('cancel_appointment', appointment_id=appointment._id) }}" 
-                                       class="action-button-red">
-                                        <i class="fas fa-times icon"></i> Cancel
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </div>
+                        <div>
+                            <label for="dosage" class="block text-sm font-medium text-gray-700">Dosage/Frequency</label>
+                            <input type="text" id="dosage" name="dosage" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No appointments found.</p>
-                    {% endif %}
-
-                </div>
-            </div>
-        </section>
-
-        <!-- Prescription List Section - Only for Doctors -->
-        {% if 'user_id' in session and session.get('user_role') == 'doctor' %}
-        <section id="prescriptionsList">
-            <div class="container">
-                <h2 class="section-title">Your Prescriptions</h2>
-                <div class="list-container" id="prescriptionsContainer">
-                    {% if prescriptions %}
-                        {% for p in prescriptions %}
-                        <div class="prescription-item">
-                            <div class="list-item-content-flex">
-                                <div class="list-item-text">
-                                    <h3 class="list-title">{{ p.get('medication', 'Unknown') }}</h3>
-                                    <p class="list-subtitle">{{ p.get('type', 'N/A') }}</p>
-                                    <p class="list-meta"><i class="far fa-calendar-alt icon"></i> Started: {{ p.get('start_date', 'N/A') }}</p>
-                                    <p class="list-meta"><i class="fas fa-prescription-bottle-alt icon"></i> {{ p.get('dosage', 'N/A') }}</p>
-                                    {% if p.get('instructions') %}
-                                    <p class="list-meta">{{ p.get('instructions') }}</p>
-                                    {% endif %}
-                                </div>
-                                <div>
-                                    <a href="{{ url_for('delete_prescription', prescription_id=p._id) }}" class="status-tag active bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-md text-sm transition duration-300">Delete</a>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
+                            <input type="date" id="start_date" name="start_date" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <p>No prescriptions found.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </section>
+                        <div>
+                            <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
+                            <input type="date" id="end_date" name="end_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="instructions" class="block text-sm font-medium text-gray-700">Special Instructions</label>
+                        <textarea id="instructions" name="instructions" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="emailNotification" name="emailNotification" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="emailNotification" class="ml-2 block text-sm text-gray-900">Email this prescription to patient</label>
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Add Prescription
+                        </button>
+                    </div>
+                </form>
+            </section>
         {% endif %}
     </main>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div id="contact">
-                    <h3 class="footer-title">Contact Us</h3>
-                    <p class="footer-text"><i class="fas fa-map-marker-alt icon"></i> 123 Medical Center Drive, Suite 400</p>
-                    <p class="footer-text"><i class="fas fa-phone icon"></i> (555) 123-4567</p>
-                    <p class="footer-text"><i class="fas fa-envelope icon"></i> info@medicareplus.com</p>
-                </div>
-                <div>
-                    <h3 class="footer-title">Quick Links</h3>
-                    <ul class="footer-list">
-                        <li><a href="#" class="footer-link">Patient Portal</a></li>
-                        <li><a href="#" class="footer-link">Find a Doctor</a></li>
-                        <li><a href="#" class="footer-link">Billing & Insurance</a></li>
-                        <li><a href="#" class="footer-link">Medical Records</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="footer-title">About MediCarePlus</h3>
-                    <p class="footer-about">Comprehensive healthcare services with a patient-first approach.</p>
-                    <div class="social-links">
-                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
-                    </div>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>© 2023 MediCarePlus. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
 </body>
 </html>
