@@ -1,92 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCarePlus - Login</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-</head>
-<body>
-    <div class="main-container">
-        <div class="left-section">
-            <div class="floating-elements">
-                <div class="floating-circle"></div>
-                <div class="floating-circle"></div>
-                <div class="floating-circle"></div>
-            </div>
-            <div class="brand-content">
-                <div class="brand-logo">
-                    <i class="fas fa-heartbeat"></i>
-                    MediCarePlus
-                </div>
-                <div class="brand-tagline">YOUR HEALTH, OUR PRIORITY</div>
-                <div class="brand-subtitle">Comprehensive Healthcare Solutions</div>
-            </div>
-        </div>
-        
-        <div class="right-section">
-            <div class="login-container">
-                <div class="login-header">
-                    <h1 class="login-title">
-                        <i class="fas fa-sign-in-alt login-icon"></i>
-                        Welcome Back
-                    </h1>
-                    <p class="login-subtitle">Sign in to your healthcare account</p>
-                </div>
-                
-                <form method="POST" id="loginForm" class="login-form">
-                    <div class="form-group">
-                        <input type="email" name="email" class="form-input" id="email" required>
-                        <label for="email" class="form-label">Email Address</label>
-                        <i class="fas fa-envelope label-icon"></i>
-                    </div>
-                    
-                    <div class="form-group">
-                        <input type="password" name="password" class="form-input" id="password" required>
-                        <label for="password" class="form-label">Password</label>
-                        <i class="fas fa-lock label-icon"></i>
-                        <button type="button" class="password-toggle" onclick="togglePassword()">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="form-options">
-                        <label class="remember-me">
-                            <input type="checkbox" id="remember">
-                            <span class="checkmark"></span>
-                            Remember me
-                        </label>
-                        <a href="#" class="forgot-password">Forgot password?</a>
-                    </div>
-                    
-                    <button type="submit" class="login-button">
-                        <span class="button-text">Sign In</span>
-                        <i class="fas fa-arrow-right button-icon"></i>
-                    </button>
-                </form>
-                
-                <div class="signup-link">
-                    Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
-                </div>
-            </div>
-        </div>
-    </div>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>MediCarePlus - Login</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  </head>
+  <body>
+      <div class="main-container">
+          <div class="left-section">
+              <div class="floating-elements">
+                  <div class="floating-circle"></div>
+                  <div class="floating-circle"></div>
+                  <div class="floating-circle"></div>
+              </div>
+              <div class="brand-content">
+                  <div class="brand-logo">
+                      <i class="fas fa-heartbeat"></i>
+                      MediCarePlus
+                  </div>
+                  <div class="brand-tagline">YOUR HEALTH, OUR PRIORITY</div>
+                  <div class="brand-subtitle">Comprehensive Healthcare Solutions</div>
+              </div>
+          </div>
+          
+          <div class="right-section">
+              <div class="login-container">
+                  <div class="login-header">
+                      <h1 class="login-title">
+                          <i class="fas fa-sign-in-alt login-icon"></i>
+                          Welcome Back
+                      </h1>
+                      <p class="login-subtitle">Sign in to your healthcare account</p>
+                  </div>
+                  
+                  <form method="POST" id="loginForm" class="login-form">
+                      <div class="form-group">
+                          <input type="email" name="email" class="form-input" id="email" required>
+                          <label for="email" class="form-label">Email Address</label>
+                          <i class="fas fa-envelope label-icon"></i>
+                      </div>
+                      
+                      <div class="form-group">
+                          <input type="password" name="password" class="form-input" id="password" required>
+                          <label for="password" class="form-label">Password</label>
+                          <i class="fas fa-lock label-icon"></i>
+                          <button type="button" class="password-toggle" >
+                              <i class="fas fa-eye"></i>
+                          </button>
+                      </div>
+                      
+                      <div class="form-options">
+                          <label class="remember-me">
+                              <input type="checkbox" id="remember">
+                              <span class="checkmark"></span>
+                              Remember me
+                          </label>
+                          <a href="#" class="forgot-password">Forgot password?</a>
+                      </div>
+                      
+                      <button type="submit" class="login-button">
+                          <span class="button-text">Sign In</span>
+                          <i class="fas fa-arrow-right button-icon"></i>
+                      </button>
+                  </form>
+                  
+                  <div class="signup-link">
+                      Don't have an account? <a href="{{ url_for('register') }}">Register here</a>
+                  </div>
+              </div>
+          </div>
+      </div>
 
-    <!-- Toast Messages for Flask Flash Messages -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <div id="toast-container" class="toast-container">
-          {% for message in messages %}
-            <div class="toast {% if 'successful' in message or 'success' in message %}toast-success{% endif %}">
-              <i class="{% if 'successful' in message or 'success' in message %}fas fa-check-circle{% else %}fas fa-exclamation-circle{% endif %}"></i>
-              {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
+      <!-- Toast Messages for Flask Flash Messages -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div id="toast-container" class="toast-container">
+            {% for message in messages %}
+              <div class="toast {% if 'successful' in message or 'success' in message %}toast-success{% endif %}">
+                <i class="{% if 'successful' in message or 'success' in message %}fas fa-check-circle{% else %}fas fa-exclamation-circle{% endif %}"></i>
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
 
-    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
-</body>
-</html>
+      <script src="{{ url_for('static', filename='css/js/app.js') }}"></script>
+  </body>
+  </html>
